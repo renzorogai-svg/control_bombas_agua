@@ -1,0 +1,13 @@
+{
+  "name": "control-bombas-agua-server",
+  "version": "1.0.0",
+  "description": "Servidor backend para el monitoreo de bombas de agua",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/server.test.js"
+  },
+  "dependencies": {
+    "express": "^4.18.3"
+  }
+}
