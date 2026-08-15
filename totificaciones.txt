@@ -1,0 +1,7 @@
+2026-08-09 19:29:10 | Alerta alarma !
+2026-08-09 19:41:01 | Alerta alarma !
+2026-08-09 20:15:56 | WA: no habilitado | TG: no habilitado | Cambios detectados en variables: ; b1: 1 -> 2 ; b2: 0 -> 2 ; b3: 1 -> 2 ; b4: 0 -> 2 ; b5: 1 -> 2 ; b6: 0 -> 2 ; b7: 1 -> 2 ; m1: 1 -> 2 ; m2: 0 -> 2 ; m3: 1 -> 2 ; m4: 0 -> 2 ; m5: 1 -> 2 ; m6: 0 -> 2 ; m7: 1 -> 2
+2026-08-09 20:16:54 | WA: no habilitado | TG: no habilitado | Cambios detectados en variables: ; b7: 2 -> 1 ; m7: 2 -> 1
+2026-08-09 20:23:43 | WA: enviado | TG: enviado | Cambios detectados en variables: ; b7: 1 -> 0 ; m7: 1 -> 2
+2026-08-09 20:28:59 | WA: enviado | TG: enviado | Cambios detectados en variables: ; boya 6: 2 -> 1 ; boya 7: 0 -> 1
+2026-08-09 20:32:02 | WA: enviado | TG: enviado | Cambios detectados en variables: ; boya 6: on -> off ; boya 7: on -> n/s ; motor 6: n/s -> on ; motor 7: n/s -> off
