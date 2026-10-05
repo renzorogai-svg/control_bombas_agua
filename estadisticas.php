@@ -1,6 +1,6 @@
 <?php
 /*
- - 05-10-2026 desde PC
+ - 05-10-2026 desde laptop
  - archivo: estadisticas.php
  - Estadísticas de registros de boyas y bombas.
  */
@@ -299,6 +299,13 @@ if ($unidad === 'meses' && preg_match('/^\d{4}-\d{2}$/', $periodoSeleccionado)) 
     $valorCampoPeriodo = $unidad === 'meses'
         ? $hoy->format('Y-m')
         : ($unidad === 'anos' ? $hoy->format('Y') : $hoy->format('Y-m-d'));
+}
+$urlHistorial = 'ver_historial.php';
+if ($inicioPeriodo && $finPeriodo) {
+    $urlHistorial .= '?' . http_build_query([
+        'fecha_inicio' => $inicioPeriodo->format('Y-m-d'),
+        'fecha_fin' => $finPeriodo->format('Y-m-d'),
+    ]);
 }
 
 function escapar($valor)
@@ -624,6 +631,13 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             background: #f3f7f4;
         }
 
+        .activation-list .activation-date {
+            padding: 4px 0 0;
+            color: var(--ink);
+            background: transparent;
+            font-weight: 700;
+        }
+
         .duration-minimum {
             color: #b42318;
             font-weight: 700;
@@ -736,9 +750,15 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
                             <?php
                                 $intervalosElemento = $intervalos[$elementos[$nombre]] ?? [];
                                 if ($intervalosElemento):
+                                    $fechaIntervaloAnterior = null;
                             ?>
                                 <ul class="activation-list" aria-label="Periodos de activación de <?= escapar($nombre) ?>">
                                     <?php foreach ($intervalosElemento as $indiceIntervalo => $intervalo): ?>
+                                        <?php $fechaIntervalo = date('Y-m-d', $intervalo['inicio']); ?>
+                                        <?php if ($fechaIntervalo !== $fechaIntervaloAnterior): ?>
+                                            <li class="activation-date"><time datetime="<?= escapar($fechaIntervalo) ?>"><?= escapar(date('d/m/Y', $intervalo['inicio'])) ?></time></li>
+                                            <?php $fechaIntervaloAnterior = $fechaIntervalo; ?>
+                                        <?php endif; ?>
                                         <li>
                                             ON<?= escapar($indiceIntervalo + 1) ?> <?= escapar(date('G:i', $intervalo['inicio'])) ?>
                                             OFF<?= escapar($indiceIntervalo + 1) ?> <?= escapar(date('G:i', $intervalo['fin'])) ?>
@@ -755,7 +775,7 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             <?php endif; ?>
         <?php endif; ?>
 
-        <p class="footer"><a class="back-link" href="ver_historial.php">Volver al historial</a></p>
+        <p class="footer"><a class="back-link" href="<?= escapar($urlHistorial) ?>">Volver al historial</a></p>
     </main>
     <script>
         const botonAnalisisLocal = document.getElementById('analizar-local');
