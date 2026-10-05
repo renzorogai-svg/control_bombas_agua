@@ -1,6 +1,6 @@
 <?php
-/*  visor.php
-    21-06-2024-5
+/*  visor.php desde PC
+    04-10-2026
 */
 session_start();
 $PASSWORD = 'admin';
@@ -366,6 +366,33 @@ if (empty($_SESSION['logged_in'])) {
             cursor: pointer;
             font-size: 12px;
         }
+
+        .history-link {
+            display: inline-block;
+            padding: 12px 24px;
+            border: 2px solid #0d47a1;
+            border-radius: 8px;
+            background: #1565c0;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .history-link:hover,
+        .history-link:focus-visible {
+            background: #0d47a1;
+        }
+
+        .history-actions {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: flex-end;
+            box-sizing: border-box;
+            margin: 0 auto 8px;
+        }
     </style>
 </head>
 <body>
@@ -381,6 +408,10 @@ if (empty($_SESSION['logged_in'])) {
         <div class="rssi-box">Señal red WiFi: <span id="wifi-rssi-value">-</span> mdb</div>
         <div class="rssi-box" id="hora-box">Hora última actualización: <span id="hora-valor">-</span></div>
         <div class="timestamp" id="time-box">Hora actual: <span id="time-string">-</span> (ID: <span id="last-id">-</span>)</div>
+    </div>
+
+    <div class="history-actions">
+        <a href="ver_historial.php" class="history-link">Historial</a>
     </div>
 
     <div class="photo-box">
