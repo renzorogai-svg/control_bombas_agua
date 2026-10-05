@@ -1,6 +1,6 @@
 <?php
 /*
- - 03-10-2026
+ - 05-10-2026 desde PC
  - archivo: estadisticas.php
  - Estadísticas de registros de boyas y bombas.
  */
@@ -46,6 +46,9 @@ $cantidad = $_GET['cantidad'] ?? '1';
 $unidad = $_GET['unidad'] ?? 'dias';
 $zonaHoraria = new DateTimeZone('America/Caracas');
 $periodoSeleccionado = $_GET['periodo'] ?? (new DateTimeImmutable('today', $zonaHoraria))->format('Y-m-d');
+$modoRangoFechas = isset($_GET['fecha_inicio']) || isset($_GET['fecha_fin']);
+$fechaInicioRango = $_GET['fecha_inicio'] ?? '';
+$fechaFinRango = $_GET['fecha_fin'] ?? '';
 $error = null;
 $estadisticas = [];
 $duraciones = [];
@@ -69,7 +72,31 @@ if (!is_string($periodoSeleccionado)) {
     $periodoSeleccionado = '';
 }
 
-if (!$error) {
+if (!$error && $modoRangoFechas) {
+    if (
+        !is_string($fechaInicioRango) || !is_string($fechaFinRango)
+        || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicioRango)
+        || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFinRango)
+    ) {
+        $error = 'Selecciona un rango de fechas válido.';
+    } else {
+        $inicioRango = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaInicioRango, $zonaHoraria);
+        $finRango = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaFinRango, $zonaHoraria);
+        if (
+            !$inicioRango || $inicioRango->format('Y-m-d') !== $fechaInicioRango
+            || !$finRango || $finRango->format('Y-m-d') !== $fechaFinRango
+            || $inicioRango > $finRango
+        ) {
+            $error = 'Selecciona un rango de fechas válido.';
+        } else {
+            $inicioPeriodo = $inicioRango->setTime(0, 0, 0);
+            $finPeriodo = $finRango->setTime(23, 59, 59);
+            $periodoEtiqueta = $fechaInicioRango === $fechaFinRango
+                ? $inicioRango->format('d/m/Y')
+                : $inicioRango->format('d/m/Y') . ' — ' . $finRango->format('d/m/Y');
+        }
+    }
+} elseif (!$error) {
     if ($unidad === 'meses') {
         if (!preg_match('/^(\d{4})-(0[1-9]|1[0-2])$/', $periodoSeleccionado, $partesPeriodo)) {
             $error = 'Selecciona un mes válido.';
@@ -164,6 +191,7 @@ if (!$error) {
                 $estadoAnterior = array_fill_keys(array_values($elementos), null);
                 $inicioConexion = array_fill_keys(array_values($elementos), null);
                 $duraciones = array_fill_keys(array_values($elementos), []);
+                $intervalos = array_fill_keys(array_values($elementos), []);
                 $boyas = array_slice($elementos, 0, 7, true);
                 $bombas = array_slice($elementos, 7, null, true);
                 $conteosPares = [];
@@ -194,7 +222,13 @@ if (!$error) {
                         if ($estado === 1 && $estadoAnterior[$columna] === 0) {
                             $inicioConexion[$columna] = $marcaTiempo;
                         } elseif ($estado === 0 && $inicioConexion[$columna] !== null) {
-                            $duraciones[$columna][] = ($marcaTiempo - $inicioConexion[$columna]) / 60;
+                            $marcaInicio = $inicioConexion[$columna];
+                            $duraciones[$columna][] = ($marcaTiempo - $marcaInicio) / 60;
+                            $intervalos[$columna][] = [
+                                'inicio' => $marcaInicio,
+                                'fin' => $marcaTiempo,
+                                'minutos' => ($marcaTiempo - $marcaInicio) / 60,
+                            ];
                             $inicioConexion[$columna] = null;
                         }
 
@@ -468,6 +502,25 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             border-bottom: 1px solid var(--line);
         }
 
+        .date-range-form {
+            flex-wrap: nowrap;
+        }
+
+        .date-range-form > label {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .date-range-form input[type="date"] {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .date-range-form > button {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
         label {
             display: grid;
             gap: 7px;
@@ -554,6 +607,23 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             font-size: 12px;
         }
 
+        .activation-list {
+            grid-column: 1 / -1;
+            display: grid;
+            gap: 5px;
+            margin: -5px 0 0;
+            padding: 0;
+            color: var(--muted);
+            font-size: 13px;
+            list-style: none;
+        }
+
+        .activation-list li {
+            padding: 7px 9px;
+            border-radius: 4px;
+            background: #f3f7f4;
+        }
+
         .duration-minimum {
             color: #b42318;
             font-weight: 700;
@@ -581,6 +651,10 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             h1 { font-size: 26px; }
             form > label, form > button { width: 100%; }
             input, select { width: 100%; }
+            .date-range-form { gap: 6px; }
+            .date-range-form > label { font-size: 11px; }
+            .date-range-form input[type="date"] { padding: 6px 2px; font-size: 12px; }
+            .date-range-form > button { width: auto; padding: 8px; font-size: 12px; }
             .stat-row { grid-template-columns: 82px minmax(50px, 1fr) 66px; gap: 9px; padding: 12px 10px; }
         }
     </style>
@@ -592,10 +666,20 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             <p class="subtitle">Cantidad de intervalos completos: una secuencia ON que luego llega a OFF.</p>
         </header>
 
-        <form method="get" action="estadisticas.php">
-            <label for="cantidad">
-                Periodo
-                <input id="cantidad" name="cantidad" type="number" min="1" max="1000" value="<?= escapar($cantidad) ?>" required>
+        <form method="get" action="estadisticas.php" class="<?= $modoRangoFechas ? 'date-range-form' : '' ?>">
+            <?php if ($modoRangoFechas): ?>
+                <label for="fecha_inicio">
+                    Día de inicio
+                    <input id="fecha_inicio" name="fecha_inicio" type="date" value="<?= escapar($fechaInicioRango) ?>" required>
+                </label>
+                <label for="fecha_fin">
+                    Día de fin
+                    <input id="fecha_fin" name="fecha_fin" type="date" value="<?= escapar($fechaFinRango) ?>" required>
+                </label>
+            <?php else: ?>
+                <label for="cantidad">
+                    Periodo
+                    <input id="cantidad" name="cantidad" type="number" min="1" max="1000" value="<?= escapar($cantidad) ?>" required>
             </label>
             <label for="unidad">
                 Unidad de tiempo
@@ -609,14 +693,19 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
                 <?= escapar($etiquetaCampoPeriodo) ?>
                 <input id="periodo" name="periodo" type="<?= escapar($tipoCampoPeriodo) ?>" value="<?= escapar($valorCampoPeriodo) ?>" <?= $unidad === 'anos' ? 'min="1000" max="9999"' : '' ?> required>
             </label>
-            <button type="submit">Mostrar estadísticas</button>
+            <?php endif; ?>
+            <button type="submit"><?= $modoRangoFechas ? 'Mostrar' : 'Mostrar estadísticas' ?></button>
         </form>
 
         <?php if ($error !== null): ?>
             <p class="error"><?= escapar($error) ?></p>
         <?php else: ?>
             <p class="period-summary">
-                Periodo de <?= escapar($cantidad) ?> <?= escapar((int) $cantidad === 1 ? $unidadesSingular[$unidad] : $unidades[$unidad]) ?> seleccionado (<?= escapar($periodoEtiqueta) ?>):
+                <?php if ($modoRangoFechas): ?>
+                    Rango seleccionado (<?= escapar($periodoEtiqueta) ?>):
+                <?php else: ?>
+                    Periodo de <?= escapar($cantidad) ?> <?= escapar((int) $cantidad === 1 ? $unidadesSingular[$unidad] : $unidades[$unidad]) ?> seleccionado (<?= escapar($periodoEtiqueta) ?>):
+                <?php endif; ?>
                 <?= escapar($inicioPeriodo->format('d/m/Y H:i')) ?> — <?= escapar($finPeriodo->format('d/m/Y H:i')) ?>.
                 <?= escapar($registrosAnalizados) ?> registro(s) analizado(s).
             </p>
@@ -628,9 +717,14 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             <?php endif; ?>
             <?php if ($registrosAnalizados === 0): ?>
                 <p class="empty-state">No hay registros dentro del periodo seleccionado.</p>
+            <?php elseif (!array_filter($estadisticas, static function ($conteo) { return $conteo > 0; })): ?>
+                <p class="empty-state">No hay elementos con activaciones completas ON a OFF en este periodo.</p>
             <?php else: ?>
                 <section class="stats-list" aria-label="Conteo de intervalos completos ON a OFF">
                     <?php foreach ($estadisticas as $nombre => $conteo):
+                        if ($conteo === 0) {
+                            continue;
+                        }
                         $ancho = $maximo > 0 ? ($conteo / $maximo * 100) : 0;
                     ?>
                         <div class="stat-row">
@@ -638,19 +732,20 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
                             <div class="bar-track" role="img" aria-label="<?= escapar($nombre) ?>: <?= escapar($conteo) ?> activación(es) completa(s) ON a OFF">
                                 <div class="bar-fill" style="width: <?= escapar(number_format($ancho, 2, '.', '')) ?>%"></div>
                             </div>
-                            <strong class="stat-value"><?= escapar($conteo) ?><?= $conteo > 0 ? ' ON' : '' ?></strong>
+                            <strong class="stat-value"><?= escapar($conteo) ?> ON</strong>
                             <?php
-                                $tiempos = $duraciones[$elementos[$nombre]] ?? [];
-                                if ($tiempos):
-                                    $minutosMinimos = min($tiempos);
-                                    $minutosMaximos = max($tiempos);
+                                $intervalosElemento = $intervalos[$elementos[$nombre]] ?? [];
+                                if ($intervalosElemento):
                             ?>
-                                <small class="duration-summary">
-                                    Duración ON entre conexión y desconexión:
-                                    <strong class="duration-minimum">mínimo <?= escapar(formatearDuracion($minutosMinimos)) ?></strong>,
-                                    <strong class="duration-minimum">máximo <?= escapar(formatearDuracion($minutosMaximos)) ?></strong>
-                                    (<?= escapar(count($tiempos)) ?> activación(es) completa(s)).
-                                </small>
+                                <ul class="activation-list" aria-label="Periodos de activación de <?= escapar($nombre) ?>">
+                                    <?php foreach ($intervalosElemento as $indiceIntervalo => $intervalo): ?>
+                                        <li>
+                                            ON<?= escapar($indiceIntervalo + 1) ?> <?= escapar(date('G:i', $intervalo['inicio'])) ?>
+                                            OFF<?= escapar($indiceIntervalo + 1) ?> <?= escapar(date('G:i', $intervalo['fin'])) ?>
+                                            duración <?= escapar(formatearDuracion($intervalo['minutos'])) ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
                             <?php else: ?>
                                 <small class="duration-summary">Sin intervalos completos ON→OFF en este periodo.</small>
                             <?php endif; ?>
@@ -741,33 +836,35 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
             anos: ['number', 'Año a contabilizar']
         };
 
-        unidadPeriodo.addEventListener('change', () => {
-            const valorAnterior = campoPeriodo.value;
-            const tipoAnterior = campoPeriodo.type;
-            const [tipoNuevo, etiquetaNueva] = etiquetasPeriodo[unidadPeriodo.value];
-            let valorNuevo = valorAnterior;
+        if (unidadPeriodo && campoPeriodo && etiquetaPeriodo) {
+            unidadPeriodo.addEventListener('change', () => {
+                const valorAnterior = campoPeriodo.value;
+                const tipoAnterior = campoPeriodo.type;
+                const [tipoNuevo, etiquetaNueva] = etiquetasPeriodo[unidadPeriodo.value];
+                let valorNuevo = valorAnterior;
 
-            if (tipoNuevo !== tipoAnterior) {
-                if (tipoNuevo === 'month') {
-                    valorNuevo = tipoAnterior === 'number'
-                        ? valorAnterior + '-01'
-                        : valorAnterior.slice(0, 7);
-                } else if (tipoNuevo === 'number') {
-                    valorNuevo = valorAnterior.slice(0, 4);
-                } else if (tipoAnterior === 'month') {
-                    valorNuevo = valorAnterior + '-01';
-                } else if (tipoAnterior === 'number') {
-                    valorNuevo = valorAnterior + '-01-01';
+                if (tipoNuevo !== tipoAnterior) {
+                    if (tipoNuevo === 'month') {
+                        valorNuevo = tipoAnterior === 'number'
+                            ? valorAnterior + '-01'
+                            : valorAnterior.slice(0, 7);
+                    } else if (tipoNuevo === 'number') {
+                        valorNuevo = valorAnterior.slice(0, 4);
+                    } else if (tipoAnterior === 'month') {
+                        valorNuevo = valorAnterior + '-01';
+                    } else if (tipoAnterior === 'number') {
+                        valorNuevo = valorAnterior + '-01-01';
+                    }
+                    campoPeriodo.value = '';
+                    campoPeriodo.type = tipoNuevo;
                 }
-                campoPeriodo.value = '';
-                campoPeriodo.type = tipoNuevo;
-            }
 
-            etiquetaPeriodo.firstChild.textContent = etiquetaNueva;
-            campoPeriodo.min = tipoNuevo === 'number' ? '1000' : '';
-            campoPeriodo.max = tipoNuevo === 'number' ? '9999' : '';
-            campoPeriodo.value = valorNuevo;
-        });
+                etiquetaPeriodo.firstChild.textContent = etiquetaNueva;
+                campoPeriodo.min = tipoNuevo === 'number' ? '1000' : '';
+                campoPeriodo.max = tipoNuevo === 'number' ? '9999' : '';
+                campoPeriodo.value = valorNuevo;
+            });
+        }
     </script>
 </body>
 </html>

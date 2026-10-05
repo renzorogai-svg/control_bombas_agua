@@ -219,28 +219,26 @@ if (empty($_SESSION['logged_in'])) {
         .boyas-status-box {
             position: absolute;
             left: 50%;
-            bottom: 16px;
+            bottom: 66px;
             transform: translateX(-50%);
-            width: min(320px, calc(100% - 24px));
+            width: min(420px, calc(100% - 24px));
             color: #ffffff;
             padding: 0;
-            font-size: 10px;
+            font-size: 12px;
             line-height: 1.2;
             z-index: 5;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            align-items: stretch;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 4px 10px;
         }
 
         .boya-status-item {
-            width: 100%;
+            min-width: 0;
             text-align: left;
             color: #ecf0f1;
-            font-size: 0.82rem;
-            padding: 0;
-            margin: 4px;
-            display: block;
+            font-size: 0.9rem;
+            padding: 2px 4px;
+            margin: 0;
         }
 
         .boya-status-item span {
@@ -386,12 +384,17 @@ if (empty($_SESSION['logged_in'])) {
         }
 
         .history-actions {
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            justify-content: flex-end;
-            box-sizing: border-box;
-            margin: 0 auto 8px;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10001;
+        }
+
+        @media (max-width: 768px) {
+            .history-link {
+                padding: 7px 12px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -410,11 +413,10 @@ if (empty($_SESSION['logged_in'])) {
         <div class="timestamp" id="time-box">Hora actual: <span id="time-string">-</span> (ID: <span id="last-id">-</span>)</div>
     </div>
 
-    <div class="history-actions">
-        <a href="ver_historial.php" class="history-link">Historial</a>
-    </div>
-
     <div class="photo-box">
+        <div class="history-actions">
+            <a href="ver_historial.php" class="history-link">Historial</a>
+        </div>
         <img src="bombaVerde1.png" id="m1-image" class="condition-image" style="left: 8%; top: 50%;" alt="Motor 1">
         <img src="bombaVerde1.png" id="m2-image" class="condition-image" style="left: 24%; top: 50%;" alt="Motor 2">
         <img src="bombaVerde7.png" id="m3-image" class="condition-image" style="left: 39%; top: 50%;" alt="Motor 3">
