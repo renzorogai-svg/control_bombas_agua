@@ -4,6 +4,3 @@ $pass = "";
 $server = "localhost";
 $db = "bombas";
 $conexion = mysqli_connect($server, $user, $pass, $db);
-?>
-
-    

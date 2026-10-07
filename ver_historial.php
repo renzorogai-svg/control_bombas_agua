@@ -1,6 +1,6 @@
 <?php
 /*
- - 03-10-2026
+ - 07-10-2026
  - archivo: estadisticas.php
  - Estadísticas de registros de boyas y bombas.
  */
@@ -785,7 +785,7 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
                 </details>
                 <button type="submit">Mostrar datos</button>
             </div>
-            <a class="button-link" href="estadisticas.php?fecha_inicio=<?= escapar($fechaInicio) ?>&amp;fecha_fin=<?= escapar($fechaFin) ?>">
+            <a id="statistics-link" class="button-link" href="estadisticas.php?fecha_inicio=<?= escapar($fechaInicio) ?>&amp;fecha_fin=<?= escapar($fechaFin) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path class="chart-bars" d="M4 19.5h16M6.5 16v-4M11.5 16V7M16.5 16v-6"></path>
                     <path class="chart-trend" d="m5 9 5-4 5 2 4-4"></path>
@@ -798,6 +798,13 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
         </form>
     </main>
     <script>
+        const statisticsLink = document.getElementById('statistics-link');
+        statisticsLink.addEventListener('click', function () {
+            const url = new URL(statisticsLink.href, window.location.href);
+            url.searchParams.set('timestamp', Date.now());
+            statisticsLink.href = url.toString();
+        });
+
         const chart = document.querySelector('.chart');
         const resetChartButton = document.getElementById('chart-reset');
         if (chart && resetChartButton) {

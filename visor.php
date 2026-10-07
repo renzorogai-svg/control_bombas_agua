@@ -1,72 +1,7 @@
 <?php
 /*  visor.php desde PC
-    04-10-2026
+    07-10-2026
 */
-session_start();
-$PASSWORD = 'admin';
-
-// Manejo de cierre de sesión
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
-    // Limpiar sesión y destruir cookie
-    $_SESSION = [];
-    if (ini_get("session.use_cookies")) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
-        );
-    }
-    session_destroy();
-    header('Location: ' . $_SERVER['REQUEST_URI']);
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
-    $pw = trim((string)$_POST['password']);
-    if ($pw === $PASSWORD) {
-        $_SESSION['logged_in'] = true;
-        header('Location: ' . $_SERVER['REQUEST_URI']);
-        exit;
-    } else {
-        $error = 'Contraseña incorrecta.';
-    }
-}
-
-if (empty($_SESSION['logged_in'])) {
-    // Mostrar formulario de login simple y detener la carga del resto de la página
-    ?>
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Acceso - Panel bombas</title>
-        <style>
-            body { font-family: Arial, Helvetica, sans-serif; background:#f4f4f4; margin:0; height:100vh; display:flex; align-items:center; justify-content:center; }
-            .login-box { background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); width:320px; }
-            .login-box h2{ margin:0 0 12px 0; font-size:18px }
-            .login-box input[type="password"]{ width:100%; padding:10px; font-size:16px; box-sizing:border-box; margin-bottom:10px }
-            .login-box button{ width:100%; padding:10px; font-size:16px; cursor:pointer }
-            .error{ color:#c0392b; margin-bottom:8px }
-            .hint{ font-size:12px; color:#7f8c8d }
-        </style>
-    </head>
-    <body>
-        <div class="login-box" role="main">
-            <h2>Acceso a visualización de bombas</h2>
-            <?php if (!empty($error)) { echo '<div class="error">' . htmlspecialchars($error) . '</div>'; } ?>
-            <form method="post" action="">
-                <label for="password">Contraseña (5 caracteres):</label>
-                <input id="password" name="password" type="password" maxlength="5" autocomplete="off" required autofocus />
-                <div class="hint">Ingrese la contraseña de 5 caracteres para acceder.</div>
-                <button type="submit">Entrar</button>
-            </form>
-        </div>
-    </body>
-    </html>
-    <?php
-    exit;
-}
 ?>
 <!-- 21-06-2024:
  Creación del panel de control en tiempo real para monitoreo de boyas y motores, con actualización automática cada 2 segundos.
@@ -347,24 +282,6 @@ if (empty($_SESSION['logged_in'])) {
             z-index: 10002;
             max-width: 280px;
         }
-        /* Estilos para el botón de cerrar sesión fijado en la esquina superior izquierda (0,0) */
-        .logout-form {
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 10005;
-        }
-
-        .logout-btn {
-            padding: 5px 5px;
-            border-radius: 4px;
-            border: 0;
-            background: #c0392b;
-            color: #fff;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
         .history-link {
             display: inline-block;
             padding: 12px 24px;
@@ -402,9 +319,6 @@ if (empty($_SESSION['logged_in'])) {
 
     <div class="container">
         <h3>Visualización remota sala bombas.</h3>
-        <form method="post" class="logout-form">
-            <button type="submit" name="logout" class="logout-btn">cerrar</button>
-        </form>
         <img src="" id="link-global-img" class="link-icon hidden" alt="enlace global">
         <div class="rssi-box">Potencia de recepción remota: <span id="rssi-value">-</span> mdb</div>
         <div class="rssi-box">Nombre de red WiFi (SSID): <span id="ssid-value">-</span></div>
@@ -415,7 +329,7 @@ if (empty($_SESSION['logged_in'])) {
 
     <div class="photo-box">
         <div class="history-actions">
-            <a href="ver_historial.php" class="history-link">Historial</a>
+            <a href="ver_historial.php" id="history-link" class="history-link">Historial</a>
         </div>
         <img src="bombaVerde1.png" id="m1-image" class="condition-image" style="left: 8%; top: 50%;" alt="Motor 1">
         <img src="bombaVerde1.png" id="m2-image" class="condition-image" style="left: 24%; top: 50%;" alt="Motor 2">
@@ -429,6 +343,11 @@ if (empty($_SESSION['logged_in'])) {
     </div>
 
     <script>
+        const historyLink = document.getElementById('history-link');
+        historyLink.addEventListener('click', () => {
+            historyLink.href = `ver_historial.php?timestamp=${Date.now()}`;
+        });
+
         const photoBox = document.querySelector('.photo-box');
         const backgroundImage = new Image();
         backgroundImage.src = 'bombas.png';

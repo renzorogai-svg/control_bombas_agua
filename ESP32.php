@@ -1,10 +1,10 @@
-<?php //11-08-2026
+<?php
+/*22-08-2026 desde PC
+*/
 date_default_timezone_set('america/caracas');
-$fecha =date('Y-m-d');
+$fecha = date('Y-m-d');
 $hora = date('H:i:s'); // con segundos para el registro
-//$dia=(int)date('d');
-//$mes = (int)date('m'); // elimina el cero
-//$anio=date('Y');
+
 $b1 = $_GET['b1'] ?? 2;
 $b2 = $_GET['b2'] ?? 2;  // <-- Esto asegura que capture el 1 o el 0 sin dejarlo vacío
 $b3 = $_GET['b3'] ?? 2;
@@ -12,6 +12,7 @@ $b4 = $_GET['b4'] ?? 2;
 $b5 = $_GET['b5'] ?? 2;
 $b6 = $_GET['b6'] ?? 2;
 $b7 = $_GET['b7'] ?? 2;
+
 $mo1 = $_GET['m1'] ?? 2;
 $mo2 = $_GET['m2'] ?? 2;
 $mo3 = $_GET['m3'] ?? 2;
@@ -19,33 +20,42 @@ $mo4 = $_GET['m4'] ?? 2;
 $mo5 = $_GET['m5'] ?? 2;
 $mo6 = $_GET['m6'] ?? 2;
 $mo7 = $_GET['m7'] ?? 2;
+
 if(isset($_GET['rssi'])) {
-   $rssi=$_GET['rssi'];
-}  else $rssi ='0';
+   $rssi = $_GET['rssi'];
+} else $rssi = '0';
+
 if(isset($_GET['rssiLoRa'])) {
-   $rssiLoRa=$_GET['rssiLoRa'];
-}  else $rssiLoRa ='0';
+   $rssiLoRa = $_GET['rssiLoRa'];
+} else $rssiLoRa = '0';
+
 if(isset($_GET['ssid'])) {
-   $ssid=$_GET['ssid'];
-} else $ssid ='No';
+   $ssid = $_GET['ssid'];
+} else $ssid = 'No';
+
 if(isset($_GET['macAP'])) {
-   $macAP=$_GET['macAP'];
-} else $macAP ='No';
+   $macAP = $_GET['macAP'];
+} else $macAP = 'No';
+
 if(isset($_GET['IpGT'])) {
-   $IpGT=$_GET['IpGT'];
-} else $IpGT ='No';
+   $IpGT = $_GET['IpGT'];
+} else $IpGT = 'No';
+
 if(isset($_GET['IpESP'])) {
-   $IpESP=$_GET['IpESP'];
-} else $IpESP ='No';
+   $IpESP = $_GET['IpESP'];
+} else $IpESP = 'No';
+
 if(isset($_GET['DNS1'])) {
-   $DNS1=$_GET['DNS1'];
-} else $DNS1 ='No';
+   $DNS1 = $_GET['DNS1'];
+} else $DNS1 = 'No';
+
 if(isset($_GET['macESP'])) {
-   $macESP=$_GET['macESP'];
-} else $macESP ='No';
+   $macESP = $_GET['macESP'];
+} else $macESP = 'No';
+
 if(isset($_GET['name'])) {
-   $name=$_GET['name'];
-} else $name ='No';
+   $name = $_GET['name'];
+} else $name = 'No';
 
 $variablesActuales = [
    'b1' => (string)$b1,
@@ -103,7 +113,8 @@ if ($result && ($registroAnterior = mysqli_fetch_assoc($result))) {
       }
    }
 }
-//.......................
+
+// Actualización de parámetros
 $sql = "UPDATE parametros 
         SET fecha = '$fecha',
             hora = '$hora', 
@@ -116,137 +127,80 @@ $sql = "UPDATE parametros
             DNS1 = '$DNS1', 
             macESP = '$macESP', 
             name = '$name'";  
-  if (mysqli_query($conexion, $sql)) {
-       // echo "Datos guardados correctamente.";
- } else {
-       echo "Error al guardar los datos: " . mysqli_error($conexion);
- }
-
-//.......................
-
-
- $sql="INSERT INTO registros (fecha,hora,b1,b2,b3,b4,b5,b6,b7,mo1,mo2,mo3,mo4,mo5,mo6,mo7) VALUES ('$fecha','$hora','$b1','$b2','$b3','$b4','$b5','$b6','$b7','$mo1','$mo2','$mo3','$mo4','$mo5','$mo6','$mo7')";
-  if ($conexion->query($sql) === TRUE) {
-  } else {
-    echo "Error: ". $sql. "<br>" . $conexion->error;
-  }
-
-/*
- // Obtener los valores de alarma desde la base de datos
-$sql = "SELECT * FROM parametros WHERE Id= '0' "; 
-$result = mysqli_query($conexion, $sql); 
-$row = mysqli_fetch_assoc($result);
-$nombre = $row['nombre'];
-$alarmaMax = $row['alarm_max'];
-$alarmaMin = $row['alarm_min'];
-$bandera = $row['alarm_bandera'];
-$alarm_notificada = $row['alarm_notificada'];
-$reporte = $row['reporte'];
-$reporte_notificado = $row['reporte_notificado'];
-$hora_reporte = $row['hora_reporte'];
-$mensajeWA = $row['mensajeWA'];
-$mensajeTG = $row['mensajeTG'];
-//............
-$t_min = $row['tiempo_min'];
-$t_max = $row['tiempo_max'];
-$umbral= $row['umbral'];
-
-  
-$conexion->close();
-echo '&t_min='.$t_min.'&t_max='.$t_max.'&umbral='.$umbral.'&fin'; 
-*/
-
-
-// ---------------- notificaciones -----WA y TG----------------------------------------------//
-//*******************************************************************************************//
-
-date_default_timezone_set('America/Caracas');
-
-$archivoNotificaciones = __DIR__ . DIRECTORY_SEPARATOR . 'totificaciones.txt';
-
-$mensaje = '';
-$mensajeWA = '1';
-$mensajeTG = '1';
-
-if (!empty($cambiosDetectados)) {
-   $mensaje = "Cambios detectados en variables:" . PHP_EOL . implode(PHP_EOL, $cambiosDetectados);
+if (!mysqli_query($conexion, $sql)) {
+    echo "Error al guardar los datos: " . mysqli_error($conexion);
 }
 
-$envioWAExitoso = $mensajeWA != '1';
-$envioTGExitoso = $mensajeTG != '1';
-$errorWA = '';
-$errorTG = '';
-$estadoWA = $mensajeWA == '1' ? 'pendiente' : 'no habilitado';
-$estadoTG = $mensajeTG == '1' ? 'pendiente' : 'no habilitado';
+// Inserción de registro histórico
+$sql = "INSERT INTO registros (fecha,hora,b1,b2,b3,b4,b5,b6,b7,mo1,mo2,mo3,mo4,mo5,mo6,mo7) VALUES ('$fecha','$hora','$b1','$b2','$b3','$b4','$b5','$b6','$b7','$mo1','$mo2','$mo3','$mo4','$mo5','$mo6','$mo7')";
+if ($conexion->query($sql) !== TRUE) {
+    echo "Error: ". $sql. "<br>" . $conexion->error;
+}
 
-if($mensaje !== '' && $mensajeWA  == '1') {
-//............................ Whats App ............................||
-   $token = "4358035";
-   $numero = "+584143459825";
-   // URL de la API de CallMeBot.  
-   $url = "https://api.callmebot.com/whatsapp.php?phone=$numero&text=" . urlencode($mensaje) . "&apikey=$token";
-   // Inicializar cURL
-   $ch = curl_init();
-   // Configurar cURL
-   curl_setopt($ch, CURLOPT_URL, $url);
-   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-   curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-   // Ejecutar la petici�n
-   $response = curl_exec($ch);
-   $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-   $curlError = curl_error($ch);
-   if ($response === false) {
-    $errorWA = 'WhatsApp no respondio: ' . $curlError;
-      $estadoWA = 'fallo';
-   } elseif ($httpCode !== 200) {
-    $errorWA = 'WhatsApp devolvio HTTP ' . $httpCode . ': ' . trim((string)$response);
-      $estadoWA = 'fallo';
-   } elseif (stripos((string)$response, 'error') !== false || stripos((string)$response, 'activate') !== false) {
-    $errorWA = 'WhatsApp rechazo el envio: ' . trim((string)$response);
-      $estadoWA = 'fallo';
-   } else {
-    $envioWAExitoso = true;
-      $estadoWA = 'enviado';
-   }
-   // Cerrar cURL
-   curl_close($ch);
-   //.................................................................||
-   }
-   if($mensaje !== '' && $mensajeTG  == '1') {
-   // URL de la APU de  Telegram.
-   $token = "8449294977:AAEfGzK9DscufRr8e8WxSG_gTMtGZ_rqu2w"; // Reemplaza con tu token
-   $chat_id = "117482557"; // Reemplaza con tu ID de chat
+// ---------------- Notificacion Telegram ---------------- //
+
+if (!empty($cambiosDetectados)) {
+   $mensaje = "Alerta de bombas (" . $fecha . " " . $hora . "):\n" . implode("\n", $cambiosDetectados);
+   $envioTGExitoso = false;
+   $estadoTG = 'fallo';
+
+   // URL de la API de Telegram.
+   $token = "8449294977:AAEfGzK9DscufRr8e8WxSG_gTMtGZ_rqu2w";
+   $chat_id = "117482557";
    $url = "https://api.telegram.org/bot$token/sendMessage?chat_id=$chat_id&text=" . urlencode($mensaje);
    $response = file_get_contents($url);
    if ($response === false) {
-    $errorTG = 'Telegram no respondio.';
+      $errorTG = 'Telegram no respondio.';
       $estadoTG = 'fallo';
+      error_log($errorTG);
    } else {
-    $envioTGExitoso = true;
+      $envioTGExitoso = true;
       $estadoTG = 'enviado';
    }
-  }
+}
 
-   // envio a WA por Twilio --------------------------------------------------------------
-// Se integra como un canal adicional, pero nunca debe dispararse cuando no hay mensaje
-// ni duplicar el envío que ya se intenta por CallMeBot / Telegram.
-$twilioHabilitado = true;
-if ($mensaje !== '' && $twilioHabilitado) {
-    $accountSid = 'TWILIO_ACCOUNT_SID';      // oculto para subir a GitHub, reemplazar con tu SID de cuenta de Twilio
-    $authToken  = 'TWILIO_AUTH_TOKEN';       // oculto para subir a GitHub, reemplazar con tu token de autenticación de Twilio   
+// ---------------- Notificaciones WhatsApp (Twilio Content API) ---------------- //
+
+$accountSid = getenv('TWILIO_ACCOUNT_SID');
+$authToken = getenv('TWILIO_AUTH_TOKEN');
+$contentSid = getenv('TWILIO_CONTENT_SID');
+$twilioHabilitado = $accountSid !== false && $accountSid !== ''
+    && $authToken !== false && $authToken !== ''
+    && $contentSid !== false && $contentSid !== '';
+
+if (!empty($cambiosDetectados) && $twilioHabilitado) {
 
     $url = "https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Messages.json";
 
     $telefonos = array(
-        'whatsapp:+584143459825',  // minumero
-        'whatsapp:+584127432683'   // Gustavo Valero
+        'whatsapp:+584143459825',
+        'whatsapp:+584127432683'
     );
+
+    // Preparar el mapeo de variables dinámicas (1 a 14) según la plantilla
+    $contentVariables = [
+        "1"  => $etiquetasValores[(string)$b1]  ?? 'n/s',
+        "2"  => $etiquetasValores[(string)$b2]  ?? 'n/s',
+        "3"  => $etiquetasValores[(string)$b3]  ?? 'n/s',
+        "4"  => $etiquetasValores[(string)$b4]  ?? 'n/s',
+        "5"  => $etiquetasValores[(string)$b5]  ?? 'n/s',
+        "6"  => $etiquetasValores[(string)$b6]  ?? 'n/s',
+        "7"  => $etiquetasValores[(string)$b7]  ?? 'n/s',
+        "8"  => $etiquetasValores[(string)$mo1] ?? 'n/s',
+        "9"  => $etiquetasValores[(string)$mo2] ?? 'n/s',
+        "10" => $etiquetasValores[(string)$mo3] ?? 'n/s',
+        "11" => $etiquetasValores[(string)$mo4] ?? 'n/s',
+        "12" => $etiquetasValores[(string)$mo5] ?? 'n/s',
+        "13" => $etiquetasValores[(string)$mo6] ?? 'n/s',
+        "14" => $etiquetasValores[(string)$mo7] ?? 'n/s'
+    ];
 
     foreach ($telefonos as $numeroDestino) {
         $data = array(
-            'From' => 'whatsapp:+14155238886',
-            'To'   => $numeroDestino,
-            'Body' => $mensaje
+            'From'             => 'whatsapp:+14155238886', // Tu número de Twilio WhatsApp
+            'To'               => $numeroDestino,
+            'ContentSid'       => $contentSid,
+            'ContentVariables' => json_encode($contentVariables)
         );
 
         $ch = curl_init($url);
@@ -256,58 +210,15 @@ if ($mensaje !== '' && $twilioHabilitado) {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
             CURLOPT_USERPWD        => "{$accountSid}:{$authToken}",
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_TIMEOUT        => 20
         ));
 
         $response = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
         curl_close($ch);
-
-        if ($response === false || $curlError !== '') {
-            $errorWA .= 'Twilio fallo en ' . $numeroDestino . ': ' . $curlError . '; ';
-            continue;
-        }
-
-        if ($httpCode < 200 || $httpCode >= 300) {
-            $errorWA .= 'Twilio ' . $numeroDestino . ' devolvio HTTP ' . $httpCode . ': ' . trim((string)$response) . '; ';
-            continue;
-        }
-
-        echo "Enviado a <strong>{$numeroDestino}</strong> - Código HTTP: {$httpCode}<br>";
     }
+} elseif (!empty($cambiosDetectados)) {
+    error_log('Twilio notifications skipped: required environment variables are not configured.');
 }
-// -------------------------------------------------------------------------------
-
-   if ($mensaje !== '' && $envioWAExitoso && $envioTGExitoso && ($mensajeWA == '1' || $mensajeTG == '1')) {
-  $fechaHora = date('Y-m-d H:i:s');
-   $registro = $fechaHora . " | WA: " . $estadoWA . " | TG: " . $estadoTG . " | " . str_replace(PHP_EOL, ' ; ', $mensaje) . PHP_EOL;
-
-  if (file_put_contents($archivoNotificaciones, $registro, FILE_APPEND | LOCK_EX) === false) {
-    echo "Error al guardar el registro de la notificacion.";
-  } else {
-    echo "Se han enviado las notificaciones.";
-  }
-} else {
-   if ($mensaje !== '') {
-      $fechaHora = date('Y-m-d H:i:s');
-      $detalleWA = $errorWA !== '' ? ' (' . $errorWA . ')' : '';
-      $detalleTG = $errorTG !== '' ? ' (' . $errorTG . ')' : '';
-      $registro = $fechaHora . " | WA: " . $estadoWA . $detalleWA . " | TG: " . $estadoTG . $detalleTG . " | " . str_replace(PHP_EOL, ' ; ', $mensaje) . PHP_EOL;
-      if (file_put_contents($archivoNotificaciones, $registro, FILE_APPEND | LOCK_EX) === false) {
-         echo "Error al guardar el registro de la notificacion.";
-      }
-   }
-  if ($errorWA !== '') {
-    echo $errorWA . PHP_EOL;
-  }
-  if ($errorTG !== '') {
-    echo $errorTG . PHP_EOL;
-  }
-}
-//*******************************************************************************************//
-
 ?>
-
-

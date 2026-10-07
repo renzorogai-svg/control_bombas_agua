@@ -1,6 +1,6 @@
 <?php
 /*
- - 05-10-2026 desde laptop
+ - 07-10-2026 desde PC
  - archivo: estadisticas.php
  - Estadísticas de registros de boyas y bombas.
  */
@@ -791,7 +791,7 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
                 try {
                     const parametros = new URLSearchParams(window.location.search);
                     parametros.set('analisis_local', '1');
-                    const respuesta = await fetch(`${window.location.pathname}?${parametros.toString()}`, {
+                    const respuesta = await fetch(`?${parametros.toString()}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ csrf: botonAnalisisLocal.dataset.csrf })
