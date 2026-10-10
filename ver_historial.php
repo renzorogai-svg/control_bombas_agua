@@ -1,7 +1,7 @@
 <?php
 /*
- - 07-10-2026
- - archivo: estadisticas.php
+ - archivo: ver_historial.php
+ - 07-10-2026 ahtagado: zoom por mouse
  - Estadísticas de registros de boyas y bombas.
  */
 include 'conexion.php';
@@ -98,6 +98,12 @@ $coloresGrafico = [
     '#268c9b', '#ba4964', '#6a7f32', '#7054c7', '#bf6c24',
     '#397f5b', '#536d91', '#a34c8b',
 ];
+$coloresElementos = [
+    'Bomba 4' => '#808080',
+    'Bomba 6' => '#f28c28',
+    'Bomba 7' => '#2e8b57',
+    'Boya 6' => '#e53935',
+];
 $fechaInicioValidada = $fechaInicioValidada ?? null;
 $duracionPeriodoSegundos = $duracionPeriodoSegundos ?? 86400;
 $graficoYInicio = 12;
@@ -105,10 +111,10 @@ $graficoAlturaY = 201 * 1.5;
 $graficoYFin = $graficoYInicio + $graficoAlturaY;
 $textoPeriodo = $fechaInicio === $fechaFin ? $fechaInicio : $fechaInicio . ' al ' . $fechaFin;
 $series = [];
-foreach ($datosSeleccionados as $indice => $dato) {
+foreach (array_keys($datosDisponibles) as $indice => $dato) {
     $serie = [
         'nombre' => $dato,
-        'color' => $coloresGrafico[$indice % count($coloresGrafico)],
+        'color' => $coloresElementos[$dato] ?? $coloresGrafico[$indice % count($coloresGrafico)],
         'puntos' => [],
         'segmentos' => [],
         'encendidos' => 0,
@@ -161,9 +167,6 @@ foreach ($datosSeleccionados as $indice => $dato) {
     }
     $series[] = $serie;
 }
-$seriesConEncendidos = array_filter($series, static function ($serie) {
-    return $serie['encendidos'] > 0;
-});
 ?>
 <!doctype html>
 <html lang="es">
@@ -273,121 +276,6 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
             font-size: 13px;
         }
 
-        .selector-actions {
-            display: flex;
-            flex: 0 1 auto;
-            align-items: stretch;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .selector-actions .data-selector {
-            flex: 1 1 auto;
-            width: auto;
-        }
-
-        .selector-actions .selector-trigger {
-            width: 100%;
-        }
-
-        .selector-actions > button {
-            flex: 0 0 auto;
-        }
-
-        .data-selector {
-            position: relative;
-            flex: 0 0 auto;
-            min-width: 0;
-            margin: 0;
-            padding: 0;
-            border: 0;
-        }
-
-        .selector-trigger {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            min-height: 42px;
-            padding: 8px 12px;
-            border: 1px solid #bdcec5;
-            border-radius: 4px;
-            color: var(--ink);
-            background: var(--surface);
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            list-style: none;
-        }
-
-        .selector-trigger::-webkit-details-marker { display: none; }
-        .selector-trigger::after { content: "+"; color: var(--accent); font-size: 20px; line-height: 1; }
-        .data-selector[open] .selector-trigger::after { content: "−"; }
-
-        .selector-popup {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            z-index: 10;
-            display: none;
-            width: min(360px, calc(100vw - 36px));
-            max-height: min(360px, 55vh);
-            overflow-y: auto;
-            padding: 14px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--surface);
-            box-shadow: 0 8px 24px rgba(24, 51, 51, 0.2);
-        }
-
-        .data-selector[open] .selector-popup { display: block; }
-
-        .data-selector-options {
-            min-width: 0;
-            margin: 0;
-            padding: 0;
-            border: 0;
-        }
-
-        .selector-popup legend {
-            margin-bottom: 9px;
-            padding: 0;
-            color: var(--ink);
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: 8px;
-            max-width: 800px;
-        }
-
-        .check-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-height: 38px;
-            padding: 6px 9px;
-            border: 1px solid var(--line);
-            border-radius: 4px;
-            color: var(--ink);
-            background: var(--surface);
-            font-size: 13px;
-            font-weight: 400;
-            cursor: pointer;
-        }
-
-        .check-option input {
-            width: 16px;
-            min-width: 16px;
-            min-height: 16px;
-            margin: 0;
-            padding: 0;
-            accent-color: var(--accent);
-        }
-
         label {
             display: grid;
             gap: 7px;
@@ -479,9 +367,9 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
 
         .chart-controls p { margin: 0; }
 
-        .chart-reset {
-            min-height: 32px;
-            padding: 5px 10px;
+        .chart-controls button {
+            flex: 0 0 auto;
+            padding: 6px 10px;
             font-size: 12px;
         }
 
@@ -495,6 +383,9 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
         }
 
         .chart:active { cursor: grabbing; }
+
+        .chart.zoom-selecting { cursor: crosshair; }
+        .zoom-selection { fill: #268c9b; fill-opacity: 0.2; stroke: #147a64; stroke-width: 1.5; }
 
         .grid-line { stroke: #e5ece8; stroke-width: 1; }
         .axis-line { stroke: #8ba09a; stroke-width: 1.2; }
@@ -512,32 +403,66 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
 
         .on-counts {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: start;
+            gap: 16px;
             margin: 14px 0;
         }
 
+        .on-count-column {
+            display: grid;
+            align-content: start;
+            gap: 8px;
+        }
+
+        .on-count-column h2 {
+            margin: 0 0 2px;
+            color: var(--ink);
+            font-size: 15px;
+        }
+
         .on-count {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
             padding: 12px 14px;
             border: 1px solid var(--line);
             border-radius: 4px;
             background: var(--surface);
+            cursor: pointer;
+        }
+
+        .on-count.unselected {
+            opacity: 0.6;
         }
 
         .on-count-name {
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 0;
             color: var(--muted);
             font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .series-toggle {
+            width: 16px;
+            min-width: 16px;
+            min-height: 16px;
+            margin: 0;
+            padding: 0;
+            accent-color: var(--accent);
         }
 
         .on-count-value {
-            display: block;
-            margin-top: 5px;
+            flex: 0 0 auto;
+            margin: 0;
             color: var(--ink);
             font-size: 13px;
             font-weight: 700;
+            white-space: nowrap;
         }
 
         .empty-state, .error { padding: 18px 0; }
@@ -573,87 +498,45 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
                 font-size: 14px;
             }
 
-            .selector-actions {
-                flex: 1 1 100%;
-                width: 100%;
-            }
+                .clear-link,
+                .button-link {
+                    width: 100%;
+                }
 
-            form > button,
-            .clear-link,
-            .button-link {
-                width: 100%;
-            }
-
-            .selector-actions .selector-trigger {
-                min-height: 48px;
-                padding: 8px;
-                gap: 8px;
-                font-size: 14px;
-            }
-
-            .selector-actions > button {
-                width: auto;
-                min-height: 48px;
-                padding: 8px 10px;
-                font-size: 13px;
-            }
-
-            .selector-popup {
-                width: 100%;
-                max-height: 50vh;
-            }
-
-            .checkbox-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 8px;
-            }
-
-            .check-option {
-                min-height: 44px;
-                padding: 8px;
-            }
-
-            .check-option input {
-                width: 18px;
-                min-width: 18px;
-                min-height: 18px;
-            }
-
-            form > button,
-            .clear-link,
-            .button-link {
-                justify-content: center;
+                .clear-link,
+                .button-link {
+                    justify-content: center;
                 min-height: 48px;
             }
 
             .result-count { line-height: 1.45; }
 
             .on-counts {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 5px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
                 margin: 8px 0;
             }
 
             .on-count {
                 min-width: 0;
-                padding: 5px 6px;
+                padding: 7px;
+                gap: 4px;
             }
 
             .on-count-name {
                 gap: 4px;
-                font-size: 10px;
+                font-size: 11px;
                 white-space: nowrap;
             }
 
             .on-count-name .legend-swatch {
-                width: 8px;
-                height: 8px;
-                flex: 0 0 8px;
+                width: 9px;
+                height: 9px;
+                flex: 0 0 9px;
             }
 
             .on-count-value {
-                margin-top: 1px;
-                font-size: 9px;
+                font-size: 10px;
             }
 
             .chart-wrap {
@@ -682,15 +565,13 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
             <p class="empty-state">Elige un periodo para ver sus registros.</p>
         <?php elseif (empty($registros)): ?>
             <p class="empty-state">No hay registros entre el <?= escapar($textoPeriodo) ?>.</p>
-        <?php elseif (empty($datosSeleccionados)): ?>
-            <p class="empty-state">Selecciona al menos un dato para mostrar el gráfico.</p>
         <?php else: ?>
             <p class="result-count"><?= count($registros) ?> registro(s) entre el <?= escapar($textoPeriodo) ?></p>
             <section class="chart-card" aria-label="Gráfico de valores del periodo">
                 <div class="chart-wrap">
                     <svg class="chart" viewBox="0 0 1000 350" data-start-date="<?= escapar($fechaInicio) ?>" data-duration-seconds="<?= escapar($duracionPeriodoSegundos) ?>" role="img" aria-labelledby="chart-title chart-description">
                         <title id="chart-title">Valores del <?= escapar($textoPeriodo) ?></title>
-                        <desc id="chart-description">Gráfico de los datos seleccionados entre las fechas indicadas. El eje vertical va de 0 a 1.</desc>
+                        <desc id="chart-description">Gráfico de los elementos seleccionados entre las fechas indicadas. El eje vertical va de 0 a 1.</desc>
                         <defs>
                             <clipPath id="chart-plot-clip">
                                 <rect x="64" y="<?= escapar($graficoYInicio) ?>" width="912" height="<?= escapar($graficoAlturaY) ?>"></rect>
@@ -711,6 +592,7 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
                         <g clip-path="url(#chart-plot-clip)">
                             <g id="chart-data">
                             <?php foreach ($series as $serie): ?>
+                                <g class="chart-series" data-series="<?= escapar($serie['nombre']) ?>"<?= in_array($serie['nombre'], $datosSeleccionados, true) ? '' : ' style="display: none;"' ?>>
                                 <?php foreach ($serie['segmentos'] as $segmento): ?>
                                     <polyline class="data-line" stroke="<?= escapar($serie['color']) ?>" points="<?php
                                         $coordenadas = [];
@@ -725,25 +607,33 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
                                         <title><?= escapar($serie['nombre']) ?> — <?= escapar($punto['hora']) ?>: <?= escapar(number_format($punto['valor'], 2, ',', '')) ?></title>
                                     </circle>
                                 <?php endforeach; ?>
+                                </g>
                             <?php endforeach; ?>
                             </g>
                         </g>
                     </svg>
                 </div>
                 <div class="chart-controls">
-                    <p>Pellizca para ampliar el rango de tiempo; arrastra para explorar.</p>
-                    <button class="chart-reset" id="chart-reset" type="button">Restablecer</button>
+                    <p>En computadora, arrastra el ratón sobre el gráfico para ampliar esa zona. En el teléfono, usa el gesto de pellizcar.</p>
+                    <button id="chart-reset-zoom" type="button" hidden>Restablecer periodo</button>
                 </div>
             </section>
-            <?php if ($seriesConEncendidos): ?>
-                <div class="on-counts" aria-label="Veces que cada elemento pasó de OFF a ON">
-                    <?php foreach ($seriesConEncendidos as $serie): ?>
-                        <div class="on-count">
-                            <span class="on-count-name">
-                                <span class="legend-swatch" style="background-color: <?= escapar($serie['color']) ?>"></span>
-                                <?= escapar($serie['nombre']) ?>
-                            </span>
-                            <strong class="on-count-value"><?= escapar($serie['encendidos']) ?> ON</strong>
+            <?php if ($series): ?>
+                <div class="on-counts" aria-label="Seleccionar elementos del gráfico y ver cuántas veces pasaron de OFF a ON">
+                    <?php foreach (['Boya' => 'Boyas', 'Bomba' => 'Bombas'] as $tipo => $titulo): ?>
+                        <div class="on-count-column">
+                            <h2><?= escapar($titulo) ?></h2>
+                            <?php foreach ($series as $serie): ?>
+                                <?php if (strpos($serie['nombre'], $tipo . ' ') !== 0) { continue; } ?>
+                                <label class="on-count<?= in_array($serie['nombre'], $datosSeleccionados, true) ? '' : ' unselected' ?>">
+                                    <span class="on-count-name">
+                                        <input class="series-toggle" type="checkbox" name="datos[]" value="<?= escapar($serie['nombre']) ?>" form="history-filter-form" aria-label="Mostrar <?= escapar($serie['nombre']) ?> en el gráfico" <?= in_array($serie['nombre'], $datosSeleccionados, true) ? 'checked' : '' ?>>
+                                        <span class="legend-swatch" style="background-color: <?= escapar($serie['color']) ?>"></span>
+                                        <?= escapar($serie['nombre']) ?>
+                                    </span>
+                                    <strong class="on-count-value"><?= escapar($serie['encendidos']) ?> ON</strong>
+                                </label>
+                            <?php endforeach; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -754,7 +644,8 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
         <?php endif; ?>
         </div>
 
-        <form method="get" action="ver_historial.php">
+        <form id="history-filter-form" method="get" action="ver_historial.php">
+            <input type="hidden" name="selector" value="1">
             <div class="date-fields">
                 <label class="date-field" for="fecha_inicio">
                     Día de inicio
@@ -764,26 +655,6 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
                     Día de fin
                     <input id="fecha_fin" name="fecha_fin" type="date" value="<?= escapar($fechaFin) ?>" required>
                 </label>
-            </div>
-            <div class="selector-actions">
-                <details class="data-selector">
-                    <summary class="selector-trigger">Elementos a mostrar (<?= count($datosSeleccionados) ?>)</summary>
-                    <div class="selector-popup">
-                        <fieldset class="data-selector-options">
-                            <legend>Elige boyas y bombas</legend>
-                            <input type="hidden" name="selector" value="1">
-                            <div class="checkbox-grid">
-                                <?php foreach ($datosDisponibles as $dato => $columna): ?>
-                                    <label class="check-option">
-                                        <input type="checkbox" name="datos[]" value="<?= escapar($dato) ?>" <?= in_array($dato, $datosSeleccionados, true) ? 'checked' : '' ?>>
-                                        <?= escapar($dato) ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        </fieldset>
-                    </div>
-                </details>
-                <button type="submit">Mostrar datos</button>
             </div>
             <a id="statistics-link" class="button-link" href="estadisticas.php?fecha_inicio=<?= escapar($fechaInicio) ?>&amp;fecha_fin=<?= escapar($fechaFin) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -806,8 +677,7 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
         });
 
         const chart = document.querySelector('.chart');
-        const resetChartButton = document.getElementById('chart-reset');
-        if (chart && resetChartButton) {
+        if (chart) {
             const plotStartX = 64;
             const plotWidth = 912;
             const totalDuration = Number(chart.dataset.durationSeconds);
@@ -816,8 +686,28 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
             const tickGroup = document.getElementById('chart-x-ticks');
             const dataGroup = document.getElementById('chart-data');
             const axisTitle = document.getElementById('chart-x-title');
+            const resetZoomButton = document.getElementById('chart-reset-zoom');
+            const selection = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             let timeWindow = { start: 0, duration: totalDuration };
             let gesture = null;
+            let mouseSelection = null;
+
+            selection.setAttribute('class', 'zoom-selection');
+            selection.setAttribute('y', '12');
+            selection.setAttribute('height', '301.5');
+            selection.setAttribute('visibility', 'hidden');
+            chart.appendChild(selection);
+
+            document.querySelectorAll('.series-toggle').forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    chart.querySelectorAll('.chart-series').forEach(function (serie) {
+                        if (serie.dataset.series === checkbox.value) {
+                            serie.style.display = checkbox.checked ? '' : 'none';
+                        }
+                    });
+                    checkbox.closest('.on-count').classList.toggle('unselected', !checkbox.checked);
+                });
+            });
 
             function chooseTickStep(windowDuration) {
                 const labelWidth = totalDuration > 86400 && windowDuration < 86400 ? 110 : 75;
@@ -901,10 +791,48 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
                     start: Math.min(totalDuration - duration, Math.max(0, start)),
                     duration: duration
                 };
+                resetZoomButton.hidden = timeWindow.duration >= totalDuration;
                 const scale = totalDuration / timeWindow.duration;
                 const translateX = plotStartX - scale * plotStartX - (timeWindow.start / timeWindow.duration) * plotWidth;
                 dataGroup.setAttribute('transform', `matrix(${scale} 0 0 1 ${translateX} 0)`);
                 renderTimeAxis();
+            }
+
+            function chartPosition(event) {
+                const point = chart.createSVGPoint();
+                point.x = event.clientX;
+                point.y = event.clientY;
+                return point.matrixTransform(chart.getScreenCTM().inverse());
+            }
+
+            function updateSelection(x) {
+                const endX = Math.min(plotStartX + plotWidth, Math.max(plotStartX, x));
+                const startX = mouseSelection.x;
+                selection.setAttribute('x', Math.min(startX, endX));
+                selection.setAttribute('width', Math.abs(endX - startX));
+            }
+
+            function endMouseSelection(event, applyZoom) {
+                if (!mouseSelection || mouseSelection.pointerId !== event.pointerId) {
+                    return;
+                }
+
+                const startX = mouseSelection.x;
+                const endX = Math.min(plotStartX + plotWidth, Math.max(plotStartX, chartPosition(event).x));
+                const selectionWidth = Math.abs(endX - startX);
+                const duration = timeWindow.duration * selectionWidth / plotWidth;
+                if (applyZoom && selectionWidth >= 6 && duration < timeWindow.duration) {
+                    const start = timeWindow.start
+                        + ((Math.min(startX, endX) - plotStartX) / plotWidth) * timeWindow.duration;
+                    applyTimeWindow(start, Math.max(totalDuration / 8, duration));
+                }
+
+                mouseSelection = null;
+                selection.setAttribute('visibility', 'hidden');
+                chart.classList.remove('zoom-selecting');
+                if (chart.hasPointerCapture(event.pointerId)) {
+                    chart.releasePointerCapture(event.pointerId);
+                }
             }
 
             function chartPlotPosition(clientX) {
@@ -996,9 +924,43 @@ $seriesConEncendidos = array_filter($series, static function ($serie) {
                 gesture = null;
             });
 
-            resetChartButton.addEventListener('click', function () {
+            chart.addEventListener('pointerdown', function (event) {
+                if (event.pointerType !== 'mouse' || event.button !== 0) {
+                    return;
+                }
+
+                const point = chartPosition(event);
+                if (point.x < plotStartX || point.x > plotStartX + plotWidth || point.y < 12 || point.y > 313.5) {
+                    return;
+                }
+
+                event.preventDefault();
+                mouseSelection = {
+                    pointerId: event.pointerId,
+                    x: point.x
+                };
+                selection.setAttribute('visibility', 'visible');
+                updateSelection(point.x);
+                chart.classList.add('zoom-selecting');
+                chart.setPointerCapture(event.pointerId);
+            });
+
+            chart.addEventListener('pointermove', function (event) {
+                if (mouseSelection && mouseSelection.pointerId === event.pointerId) {
+                    updateSelection(chartPosition(event).x);
+                }
+            });
+
+            chart.addEventListener('pointerup', function (event) {
+                endMouseSelection(event, true);
+            });
+
+            chart.addEventListener('pointercancel', function (event) {
+                endMouseSelection(event, false);
+            });
+
+            resetZoomButton.addEventListener('click', function () {
                 applyTimeWindow(0, totalDuration);
-                gesture = null;
             });
 
             window.addEventListener('resize', renderTimeAxis);

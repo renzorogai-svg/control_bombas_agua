@@ -6,7 +6,20 @@
  */
 session_start();
 date_default_timezone_set('America/Caracas');
+mysqli_report(MYSQLI_REPORT_OFF);
+$advertenciaConexion = null;
+set_error_handler(static function ($severity, $message) use (&$advertenciaConexion) {
+    if ($severity === E_WARNING && strpos($message, 'mysqli_connect():') === 0) {
+        $advertenciaConexion = $message;
+        return true;
+    }
+    return false;
+});
 include 'conexion.php';
+restore_error_handler();
+if ($advertenciaConexion !== null) {
+    error_log($advertenciaConexion);
+}
 
 $elementos = [
     'Boya 1' => 'b1',
@@ -760,8 +773,8 @@ $tokenAnalisisIA = $_SESSION['estadisticas_local_csrf'];
                                             <?php $fechaIntervaloAnterior = $fechaIntervalo; ?>
                                         <?php endif; ?>
                                         <li>
-                                            ON<?= escapar($indiceIntervalo + 1) ?> <?= escapar(date('G:i', $intervalo['inicio'])) ?>
-                                            OFF<?= escapar($indiceIntervalo + 1) ?> <?= escapar(date('G:i', $intervalo['fin'])) ?>
+                                            <strong>ON<?= escapar($indiceIntervalo + 1) ?></strong> <?= escapar(date('G:i', $intervalo['inicio'])) ?>
+                                            <strong>OFF<?= escapar($indiceIntervalo + 1) ?></strong> <?= escapar(date('G:i', $intervalo['fin'])) ?>
                                             duración <?= escapar(formatearDuracion($intervalo['minutos'])) ?>
                                         </li>
                                     <?php endforeach; ?>
